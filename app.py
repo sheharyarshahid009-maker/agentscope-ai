@@ -57,7 +57,11 @@ MODELS = {
     "🧠 GPT-OSS 120B (Smart)": "openai/gpt-oss-120b",
     "🦙 Llama 3.3 70B": "llama-3.3-70b-versatile",
 }
-VISION_MODEL = "llama-3.2-90b-vision-preview"
+VISION_MODELS = [
+    "meta-llama/llama-4-scout-17b-16e-instruct",
+    "meta-llama/llama-4-maverick-17b-128e-instruct",
+    "qwen/qwen3.8-27b",
+]
 
 SYSTEM_PROMPT = """You are AgentScope AI, an autonomous assistant with real tools.
 TOOLS: web_search (current info/news), get_weather (any city), calculator (math),
@@ -188,7 +192,7 @@ def run_agent(client, model, messages):
                     continue
                 raise
         if resp is None:
-            return "Rate limit! 1 minute ruko phir try karo.", tool_log
+            return "⚠️ Sab models par rate limit hai! 1 minute ruko phir dobara try karo. (Groq free tier ka per-minute limit)", tool_log
         msg = resp.choices[0].message
         if not msg.tool_calls:
             return msg.content or "No response.", tool_log
@@ -207,16 +211,20 @@ def run_agent(client, model, messages):
 
 def analyze_image(client, img_bytes, question):
     b64 = base64.b64encode(img_bytes).decode()
-    try:
-        r = client.chat.completions.create(
-            model=VISION_MODEL,
-            messages=[{"role": "user", "content": [
-                {"type": "text", "text": question or "Describe this image in detail."},
-                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}}]}],
-            max_tokens=1200)
-        return r.choices[0].message.content
-    except Exception as e:
-        return f"⚠️ Image analysis unavailable right now. ({str(e)[:120]})"
+    last_err = ""
+    for vm in VISION_MODELS:
+        try:
+            r = client.chat.completions.create(
+                model=vm,
+                messages=[{"role": "user", "content": [
+                    {"type": "text", "text": question or "Describe this image in detail."},
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}}]}],
+                max_tokens=1200)
+            return r.choices[0].message.content
+        except Exception as e:
+            last_err = str(e)[:120]
+            continue
+    return f"⚠️ Image analysis unavailable right now. ({last_err})"
 
 def speak(text):
     try:
@@ -403,3 +411,4 @@ if prompt:
 
 # ============ FOOTER ============
 st.markdown('<div class="footer">Crafted with ❤️ by <b>Engr. Muhammad Sheharyar Khan</b> &nbsp;•&nbsp; Powered by Agentic AI + Groq</div>', unsafe_allow_html=True)
+
