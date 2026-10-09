@@ -284,7 +284,7 @@ with st.sidebar:
             st.rerun()
 
     st.markdown("### 🖼️ Vision")
-    img_file = st.file_uploader("Image upload karo", type=["png", "jpg", "jpeg"])
+    img_file = st.file_uploader("Image upload karo", type=["png", "jpg", "jpeg", "jfif", "webp"])
     img_q = st.text_input("Image ke baare me poocho", placeholder="Is tasveer me kya hai?")
     if st.button("🔍 Analyze Image", use_container_width=True):
         if not img_file:
@@ -411,4 +411,5 @@ if prompt:
 
 # ============ FOOTER ============
 st.markdown('<div class="footer">Crafted with ❤️ by <b>Engr. Muhammad Sheharyar Khan</b> &nbsp;•&nbsp; Powered by Agentic AI + Groq</div>', unsafe_allow_html=True)
+
 
